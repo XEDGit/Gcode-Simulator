@@ -33,13 +33,15 @@ int moved;
 typedef struct {
     int x, y;
 } History;
-History tail[2000];
+History tail[20000];
 
 int lastHRounds;
 
-int rounds = 0;
+unsigned int rounds = 0;
 
 struct stat checkFolder = {0};
+
+int speed = 1;
 
 void clr() {
     system("cls");
@@ -73,22 +75,23 @@ void printResult(char res[29][59]) {
 
     printf(" _______________________________________________________\n");
     
-    printf("\n\n\tSpeed: %d", agente.speed);
+    printf("\n\n\tPrinter speed: %d", agente.speed);
+	printf("\n\n\tSimulation speed: x%d", speed);
     printf("\n\tFeed Rate: %d", agente.feedRate);
     printf("\n\tX: %d\tY: %d\tZ: %d", agente.x, agente.y, agente.z);
     if (fbfMode == 1)
     {
         printf("\n\n\tPress any key to see next frame, press X to exit");
     } else  {
-        printf("\n\tOptions\n\tV: Pause\tC: Clear filament trace\n\tX: Toggle frame-by-frame mode\tZ: Exit");
+        printf("\n\tOptions\n\tV: Pause\tC: Clear filament trace\n\tX: Toggle frame-by-frame mode\n\tN: Decrease Sim. speed\tM: Increase Sim. speed\n\tZ: Exit");
     }
 }
 
-int printSimulation(char line[]) {
+int printSimulation(char line[], int *index) {
 
     //break down line in single command into brokencommand[]
 
-    int counter = 0;
+    unsigned int counter = 0;
     int commandCounter = 0;
     int commandSubCounter = 0;
     int skipDecimals = 0;
@@ -181,7 +184,7 @@ int printSimulation(char line[]) {
         char modifiedLine[59];
         strcpy(modifiedLine, simulatedLine);
 
-        int tailCounter = 0;
+        unsigned int tailCounter = 0;
         while (tailCounter < (sizeof(tail)/sizeof(tail[0]))-2 && tailCounter != rounds)
         {
             if (tail[tailCounter].y/8 == lineCounter)
@@ -211,7 +214,19 @@ int printSimulation(char line[]) {
         }
     }
     
-    //Sleep(2);
+    if (*index >= speed)
+	{
+		*index = 1;
+	}
+	else
+	{
+		*index = *index + 1;
+		return 1;
+	}
+	if (speed < 1)
+	{
+		speed = 1;
+	}
 
     printResult(result);
     
@@ -244,6 +259,7 @@ void historySimulation() {
 void escape() {
     menuIndex = 0;
     subMenu = 0;
+	speed = 1;
     }
 
 void simulate() {
@@ -251,12 +267,12 @@ void simulate() {
     strcat(fullPath, fileList[fileNumber]);
     FILE *file = fopen(fullPath, "r");
     char line[256];
+	int index = 1;
     if (file != NULL)
     {
-        
         while (fgets(line, sizeof(line), file))
         {
-            if (printSimulation(line) == 1)
+            if (printSimulation(line, &index) == 1)
             {
                 historySimulation();
             }
@@ -269,7 +285,7 @@ void simulate() {
                     escape();
                     break;
                 }
-                if (key == 'x')
+                else if (key == 'x')
                 {
                     if (fbfMode == 0)
                     {
@@ -280,15 +296,23 @@ void simulate() {
                         fbfMode--;
                     }
                 }
-                if (key == 'v')
+                else if (key == 'v')
                 {
                     printf("\n\n\tPress Enter to restart...");
                     getchar();
                 }
-                if (key == 'c')
+                else if (key == 'c')
                 {
                     clearTail();
                 }
+				else if (key == 'm')
+				{
+					speed++;
+				}
+				else if (key == 'n')
+				{
+					speed--;
+				}
             }
         }
         clearTail();
@@ -367,12 +391,12 @@ void printMenu() {
             //read and simulate selected file
             case 1:
                 printf("_________________________________________________________\n\n");
-                printf("\t\t  Gcode Simulator\n\n\n");
-                printf("\t\t\tSimulator\n\n");
+				printf("\t\t  Gcode Simulator\n\n\n");
+				printf("\t\t\tSimulator\n\n");
 
-                simulate();
-                getchar();
-                escape();
+				simulate();
+				getchar();
+				escape();
 
                 break;
         }
