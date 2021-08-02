@@ -137,7 +137,7 @@ int printSimulation(char line[], int *index)
 			break;
 		}
 
-		char digits[5];
+		char digits[6];
 		strcpy(digits, brokenCommand[brokenCounter]);
 		memmove(&digits[0], &digits[1], strlen(digits));
 		int number;
